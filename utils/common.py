@@ -11,20 +11,24 @@ def load_animes(nrows=None):
     data.sort_values("title", axis=0, ascending=True, inplace=True)
     return data
 
+df_animes = load_animes()
 
 @st.cache_data
-def load_anime(df, uid):
-    selected_anime = df[df["uid"]==uid]
+def load_anime(uid):
+    selected_anime = df_animes[df_animes["uid"]==uid]
     return selected_anime.iloc[0]
 
 
 @st.cache_data
 def load_profiles(nrows=None):
-    data = pd.read_csv(DATA_PROFILES_URL)
+    data = pd.read_csv(DATA_PROFILES_URL, nrows=nrows)
     data.sort_values("profile", axis=0, ascending=True, inplace=True)
     return data
 
+df_profiles = load_profiles()
+
 @st.cache_data
-def load_user(df, profile):
-    selected_user = df[df["profile"]==profile]
-    return selected_user.iloc[0]
+def load_profile(profile):
+    selected_profile = df_profiles[df_profiles["profile"]==profile]
+    return selected_profile.iloc[0]
+
