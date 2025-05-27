@@ -14,16 +14,7 @@ We analyze your liked animes and compare them with other users favorites to sugg
 DATA_PROFILES_URL = ("data/profiles_clean.csv")
 DATA_URL = ("data/profiles_clean.csv")
 
-@st.cache_data
-def load_data():
-    data = pd.read_csv(DATA_URL)
-    data.sort_values("profile", axis=0, ascending=True, inplace=True)
-    return data
 
-@st.cache_data
-def load_user(profile):
-    selected_user = df[df["profile"]==profile]
-    return selected_user.iloc[0]
 
 @st.cache_data
 def load_animes(nrows):
