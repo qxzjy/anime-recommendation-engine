@@ -30,9 +30,12 @@ if selected_user_profile != None :
                     anime = load_anime(fav)
                     if anime is not None:
                         with col:
-                            st.image(anime["img_url"], caption=anime["title"], use_column_width=True)
+                            if anime["img_url"] is None or anime["img_url"] != anime["img_url"]:
+                                st.write("No picture to display.")
+                            else:
+                                st.image(anime["img_url"], caption=anime["title"], use_column_width=False)
         else:
-            st.write("Aucun favori à afficher.")
+            st.write("No favorite anime to display.")
 
     # RECO_02
     with st.expander("Anime recommendations based on what users who liked the same things as me"):
