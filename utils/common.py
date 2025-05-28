@@ -1,8 +1,10 @@
 import streamlit as st
 import pandas as pd
+from sklearn.metrics.pairwise import cosine_similarity
 
 DATA_ANIMES_URL = ("https://anime-recommendation-engine.s3.eu-west-3.amazonaws.com/data/animes_clean.csv")
 DATA_PROFILES_URL = ("https://anime-recommendation-engine.s3.eu-west-3.amazonaws.com/data/profiles_clean.csv")
+DATA_SYNOPSIS_EMBEDDING_URL = ("https://anime-recommendation-engine.s3.eu-west-3.amazonaws.com/data/synopsis_embedding.json")
 
 
 @st.cache_data
@@ -34,3 +36,16 @@ def load_profile(profile):
     selected_profile = df_profiles[df_profiles["profile"]==profile]
     return selected_profile.iloc[0]
 
+@st.cache_data
+def load_synopsis_embedding(nrows=None):
+    data = pd.read_json(DATA_SYNOPSIS_EMBEDDING_URL, nrows=nrows)
+    return data
+
+df_synopsis_embedding = load_synopsis_embedding()
+
+def search_closest_by_uid(given_uid, df, filter):
+        given_embedding = df.loc[df['uid'] == int(given_uid), filter].values[0]
+        similarities = cosine_similarity([given_embedding], list(df[filter]))[0]
+        similarity_df = pd.DataFrame({'uid': df['uid'], 'similarity': similarities})
+        closest = similarity_df[similarity_df['uid'] != given_uid].sort_values(by='similarity', ascending=False).head(5)
+        return closest
