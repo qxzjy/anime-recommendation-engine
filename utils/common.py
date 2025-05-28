@@ -1,8 +1,8 @@
 import streamlit as st
 import pandas as pd
 
-DATA_ANIMES_URL = ("data/animes_clean.csv")
-DATA_PROFILES_URL = ("data/profiles_clean.csv")
+DATA_ANIMES_URL = ("https://anime-recommendation-engine.s3.eu-west-3.amazonaws.com/data/animes_clean.csv")
+DATA_PROFILES_URL = ("https://anime-recommendation-engine.s3.eu-west-3.amazonaws.com/data/profiles_clean.csv")
 
 
 @st.cache_data
