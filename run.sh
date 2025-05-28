@@ -1,0 +1,1 @@
+streamlit run Anime_Recommendation_Engine.py

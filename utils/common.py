@@ -15,7 +15,9 @@ df_animes = load_animes()
 
 @st.cache_data
 def load_anime(uid):
-    selected_anime = df_animes[df_animes["uid"]==uid]
+    selected_anime = df_animes[df_animes["uid"]==int(uid)]
+    if selected_anime.empty:
+        return None
     return selected_anime.iloc[0]
 
 
