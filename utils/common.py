@@ -7,6 +7,7 @@ DATA_PROFILES_URL = ("https://anime-recommendation-engine.s3.eu-west-3.amazonaws
 DATA_SYNOPSIS_EMBEDDING_URL = ("https://anime-recommendation-engine.s3.eu-west-3.amazonaws.com/data/synopsis_embedding.json")
 
 
+# ANIMES
 @st.cache_data
 def load_animes(nrows=None):
     data = pd.read_csv(DATA_ANIMES_URL, nrows=nrows)
@@ -21,8 +22,10 @@ def load_anime(uid):
     if selected_anime.empty:
         return None
     return selected_anime.iloc[0]
+##
 
 
+# PROFILES
 @st.cache_data
 def load_profiles(nrows=None):
     data = pd.read_csv(DATA_PROFILES_URL, nrows=nrows)
@@ -35,7 +38,10 @@ df_profiles = load_profiles()
 def load_profile(profile):
     selected_profile = df_profiles[df_profiles["profile"]==profile]
     return selected_profile.iloc[0]
+##
 
+
+# SYNOPSIS EMBEDDING
 @st.cache_data
 def load_synopsis_embedding(nrows=None):
     data = pd.read_json(DATA_SYNOPSIS_EMBEDDING_URL, nrows=nrows)
@@ -49,3 +55,18 @@ def search_closest_by_uid(given_uid, df, filter):
         similarity_df = pd.DataFrame({'uid': df['uid'], 'similarity': similarities})
         closest = similarity_df[similarity_df['uid'] != given_uid].sort_values(by='similarity', ascending=False).head(5)
         return closest
+##
+
+# NAN
+def write_col(col):
+    if col is None or col != col:
+        st.write("No information available.")
+    else:
+        st.write(col)
+
+def display_img(col_image, col_caption):
+    if col_image is None or col_image != col_image:
+        st.write("No picture to display.")
+    else:
+        st.image(col_image, caption=col_caption, use_column_width=False)
+##

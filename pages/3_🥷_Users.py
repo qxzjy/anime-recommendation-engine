@@ -1,6 +1,6 @@
 import ast
 import streamlit as st
-from utils.common import df_profiles, load_profile, df_animes, load_anime
+from utils.common import df_profiles, load_profile, df_animes, load_anime, display_img
 
 st.markdown("## 🎥 User-Based Anime Recommendations")
 
@@ -30,10 +30,7 @@ if selected_user_profile != None :
                     anime = load_anime(fav)
                     if anime is not None:
                         with col:
-                            if anime["img_url"] is None or anime["img_url"] != anime["img_url"]:
-                                st.write("No picture to display.")
-                            else:
-                                st.image(anime["img_url"], caption=anime["title"], use_column_width=False)
+                            display_img(anime["img_url"], anime["title"])
         else:
             st.write("No favorite anime to display.")
 
