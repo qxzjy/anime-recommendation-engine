@@ -1,5 +1,8 @@
 import ast
 import streamlit as st
+
+st.set_page_config(page_title="Anime Recommendation Engine 🏯", layout="wide")
+
 from utils.common import df_profiles, load_profile, df_animes, load_anime, display_img
 
 st.markdown("## 🎥 User-Based Anime Recommendations")

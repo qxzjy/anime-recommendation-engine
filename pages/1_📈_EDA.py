@@ -1,5 +1,7 @@
 import streamlit as st
 
+st.set_page_config(page_title="Anime Recommendation Engine 🏯", layout="wide")
+
 st.markdown("# EDA")
 
 st.markdown("""

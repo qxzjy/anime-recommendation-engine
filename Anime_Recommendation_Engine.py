@@ -1,6 +1,5 @@
 import streamlit as st
 
-### Config
 st.set_page_config(page_title="Anime Recommendation Engine 🏯", layout="wide")
 
 st.title("Anime Recommendation Engine 🏯")

@@ -1,4 +1,7 @@
 import streamlit as st
+
+st.set_page_config(page_title="Anime Recommendation Engine 🏯", layout="wide")
+
 from utils.common import df_animes, load_anime, df_synopsis_embedding, search_closest_by_uid, write_col, display_img
 
 st.markdown("## 🎥 Anime Search & Similar Recommendations")
