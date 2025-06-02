@@ -5,20 +5,19 @@ from sklearn.metrics.pairwise import cosine_similarity
 DATA_ANIMES_URL = ("https://anime-recommendation-engine.s3.eu-west-3.amazonaws.com/data/animes_clean.csv")
 DATA_PROFILES_URL = ("https://anime-recommendation-engine.s3.eu-west-3.amazonaws.com/data/profiles_clean.csv")
 DATA_SYNOPSIS_EMBEDDING_URL = ("https://anime-recommendation-engine.s3.eu-west-3.amazonaws.com/data/synopsis_embedding.json")
-
+DATA_ALS_RECOMMENDATION_URL = ("https://anime-recommendation-engine.s3.eu-west-3.amazonaws.com/data/als_favorite_score_based_reco.csv")
 
 # ANIMES
 @st.cache_data
 def load_animes(nrows=None):
     data = pd.read_csv(DATA_ANIMES_URL, nrows=nrows)
+    data["episodes"] = data["episodes"].astype("Int64")
     data.sort_values("title", axis=0, ascending=True, inplace=True)
     return data
 
-df_animes = load_animes()
-
 @st.cache_data
-def load_anime(uid):
-    selected_anime = df_animes[df_animes["uid"]==int(uid)]
+def load_anime(df, uid):
+    selected_anime = df[df["uid"]==int(uid)]
     if selected_anime.empty:
         return None
     return selected_anime.iloc[0]
@@ -32,11 +31,9 @@ def load_profiles(nrows=None):
     data.sort_values("profile", axis=0, ascending=True, inplace=True)
     return data
 
-df_profiles = load_profiles()
-
 @st.cache_data
-def load_profile(profile):
-    selected_profile = df_profiles[df_profiles["profile"]==profile]
+def load_profile(df, profile):
+    selected_profile = df[df["profile"]==profile]
     return selected_profile.iloc[0]
 ##
 
@@ -46,8 +43,6 @@ def load_profile(profile):
 def load_synopsis_embedding(nrows=None):
     data = pd.read_json(DATA_SYNOPSIS_EMBEDDING_URL, nrows=nrows)
     return data
-
-df_synopsis_embedding = load_synopsis_embedding()
 
 def search_closest_by_uid(given_uid, df, filter):
         given_embedding = df.loc[df['uid'] == int(given_uid), filter].values[0]
@@ -69,4 +64,18 @@ def display_img(col_image, col_caption):
         st.write("No picture to display.")
     else:
         st.image(col_image, caption=col_caption, use_column_width=False)
+##
+
+# ALS (Collaborative filtering)
+@st.cache_data
+def load_als_recommendations():
+    data = pd.read_csv(DATA_ALS_RECOMMENDATION_URL)
+    return data
+
+@st.cache_data
+def load_profile_recommendations(df, profile):
+    selected_profile = df[df["profile"]==profile]
+    if selected_profile.empty :
+        return selected_profile
+    return selected_profile.iloc[0]
 ##
