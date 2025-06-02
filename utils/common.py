@@ -4,6 +4,7 @@ from sklearn.metrics.pairwise import cosine_similarity
 
 DATA_ANIMES_URL = ("https://anime-recommendation-engine.s3.eu-west-3.amazonaws.com/data/animes_clean.csv")
 DATA_PROFILES_URL = ("https://anime-recommendation-engine.s3.eu-west-3.amazonaws.com/data/profiles_clean.csv")
+DATA_REVIEWS_URL = ("https://anime-recommendation-engine.s3.eu-west-3.amazonaws.com/data/reviews_clean.csv")
 DATA_SYNOPSIS_EMBEDDING_URL = ("https://anime-recommendation-engine.s3.eu-west-3.amazonaws.com/data/synopsis_embedding.json")
 DATA_ALS_RECOMMENDATION_URL = ("https://anime-recommendation-engine.s3.eu-west-3.amazonaws.com/data/als_favorite_score_based_reco.csv")
 
@@ -36,6 +37,13 @@ def load_profile(df, profile):
     selected_profile = df[df["profile"]==profile]
     return selected_profile.iloc[0]
 ##
+
+
+# REVIEWS
+@st.cache_data
+def load_reviews(nrows=None):
+    data = pd.read_csv(DATA_REVIEWS_URL, nrows=nrows)
+    return data
 
 
 # SYNOPSIS EMBEDDING
@@ -78,4 +86,6 @@ def load_profile_recommendations(df, profile):
     if selected_profile.empty :
         return selected_profile
     return selected_profile.iloc[0]
-##
+
+
+
