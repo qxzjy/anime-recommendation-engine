@@ -2,7 +2,7 @@ import streamlit as st
 
 st.set_page_config(page_title="Anime Recommendation Engine 🏯", layout="wide")
 
-from utils.common import df_animes, load_anime, df_synopsis_embedding, search_closest_by_uid, write_col, display_img
+from utils.common import load_animes, load_anime, load_synopsis_embedding, search_closest_by_uid, write_col, display_img
 
 st.markdown("## 🎥 Anime Search & Similar Recommendations")
 
@@ -10,6 +10,10 @@ st.write(
     """Search for an anime and discover similar titles based on their descriptions.  
 This tool helps you find new animes with themes and storylines that match your interests."""
 )
+
+# Load data
+df_animes = load_animes()
+df_synopsis_embedding = load_synopsis_embedding()
 
 # Create a dictionnary {title to show : id}
 animes_dict = {row["title"]: row["uid"] for _, row in df_animes.iterrows()}
@@ -23,7 +27,7 @@ selected_anime_uid = st.selectbox("Choose anime",
 # Anime selected
 if selected_anime_uid != None :
 
-    selected_anime = load_anime(animes_dict[selected_anime_uid])
+    selected_anime = load_anime(df_animes, animes_dict[selected_anime_uid])
 
     if selected_anime is not None:
 
@@ -51,7 +55,7 @@ if selected_anime_uid != None :
                 if favorites_anime:
                     for fav in favorites_anime:
                         col1, col2 = st.columns(2)
-                        anime = load_anime(fav)                    
+                        anime = load_anime(df_animes, fav)                    
                         if anime is not None:
                             with col1:
                                 display_img(anime["img_url"], anime["title"])
