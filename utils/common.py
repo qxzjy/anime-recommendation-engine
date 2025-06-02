@@ -39,6 +39,13 @@ def load_profile(df, profile):
 ##
 
 
+# REVIEWS
+@st.cache_data
+def load_reviews(nrows=None):
+    data = pd.read_csv(DATA_REVIEWS_URL, nrows=nrows)
+    return data
+
+
 # SYNOPSIS EMBEDDING
 @st.cache_data
 def load_synopsis_embedding(nrows=None):
@@ -79,14 +86,6 @@ def load_profile_recommendations(df, profile):
     if selected_profile.empty :
         return selected_profile
     return selected_profile.iloc[0]
-##@st.cache_data
-def load_reviews(nrows=None):
-    data = pd.read_csv(DATA_REVIEWS_URL, nrows=nrows)
-    return data
 
-df_reviews = load_reviews()
 
-@st.cache_data
-def load_review(uid):
-    selected_review = df_reviews[df_reviews["uid"]==int(uid)]
-    return selected_review.iloc[0]
+

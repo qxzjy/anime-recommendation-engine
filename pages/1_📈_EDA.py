@@ -4,10 +4,12 @@ import plotly.express as px
 import ast
 
 st.set_page_config(page_title="EDA 🏯", layout="wide")
-from utils.common import df_animes, df_profiles, df_reviews
+from utils.common import load_animes, load_profiles, load_reviews
 
-
-st.set_page_config(page_title="Anime Recommendation Engine 🏯", layout="wide")
+#load data
+df_animes = load_animes()
+df_profiles = load_profiles()
+df_reviews = load_reviews()
 
 st.markdown("# EDA")
 
@@ -30,7 +32,7 @@ You will find visualizations and statistics about:
 - The 10 most reviewed animes
 - The age and gender repartition of the user base for the platform
 - The amount of reviews by anime (data for the top 10 best rated entries)
-- The amount of reviews for the 10 most reviewed entries
+- The amount of reviews for the 10 most viewed entries
 
 These insights help guide the recommendation system and ensure data quality.
 """)
@@ -143,11 +145,11 @@ reviews_top10 = px.bar(reviews_top,
                        labels={'count': 'Amount of reviews', 'title': ''},
                         title='Amount of reviews on the top 10 best ranked animes (excluding top 3 entry for which data is missing)',
                         text='ranked',
-                        height= 700,
-                        color_discrete_sequence=px.colors.qualitative.Bold,
+                        height= 600,
+                        color_discrete_sequence=px.colors.qualitative.Dark24_r,
                         template='plotly_dark'
                        )
-                       
+reviews_top10.update_traces(textangle=0, textposition="outside")                      
 st.plotly_chart(reviews_top10, use_container_width=True)
 
 
@@ -186,7 +188,7 @@ reviews_mostpop = px.bar(reviews_pop,
                         color_discrete_sequence=px.colors.qualitative.Bold,
                         template='plotly_dark'
                        )
-
+reviews_mostpop.update_traces(textangle=0, textposition="outside")
 st.plotly_chart(reviews_mostpop, use_container_width=True)
 
 
