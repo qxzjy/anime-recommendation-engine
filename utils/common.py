@@ -6,7 +6,7 @@ DATA_ANIMES_URL = ("https://anime-recommendation-engine.s3.eu-west-3.amazonaws.c
 DATA_PROFILES_URL = ("https://anime-recommendation-engine.s3.eu-west-3.amazonaws.com/data/profiles_clean.csv")
 DATA_REVIEWS_URL = ("https://anime-recommendation-engine.s3.eu-west-3.amazonaws.com/data/reviews_clean.csv")
 DATA_SYNOPSIS_EMBEDDING_URL = ("https://anime-recommendation-engine.s3.eu-west-3.amazonaws.com/data/synopsis_embedding.json")
-DATA_ALS_RECOMMENDATION_URL = ("https://anime-recommendation-engine.s3.eu-west-3.amazonaws.com/data/als_favorite_score_based_reco.csv")
+DATA_ALS_RECOMMENDATION_URL = ("https://anime-recommendation-engine.s3.eu-west-3.amazonaws.com/data/als_is_favorite_based_reco.csv")
 
 # ANIMES
 @st.cache_data

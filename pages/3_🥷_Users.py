@@ -49,11 +49,11 @@ if selected_user_profile != None :
         if selected_profile_recommendations.empty :
                 st.write("No recommendation provided, no favorites animes.")
         else:
-            favorites_anime = ast.literal_eval(selected_profile_recommendations["favorites_anime"])
+            recommendations = ast.literal_eval(selected_profile_recommendations["recommendations"])
 
-            for i in range(0, len(favorites_anime), 3):
+            for i in range(0, len(recommendations), 3):
                 cols = st.columns(3)
-                for col, fav in zip(cols, favorites_anime[i:i+3]):
+                for col, fav in zip(cols, recommendations[i:i+3]):
                     anime = load_anime(df_animes, fav)
                     if anime is not None:
                         with col:
