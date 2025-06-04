@@ -61,11 +61,20 @@ def load_synopsis_embedding(nrows=None):
     data = pd.read_json(DATA_SYNOPSIS_EMBEDDING_URL, nrows=nrows)
     return data
 
-def search_closest_by_uid(given_uid, df, filter):
-        given_embedding = df.loc[df['uid'] == int(given_uid), filter].values[0]
-        similarities = cosine_similarity([given_embedding], list(df[filter]))[0]
+def closest_similarity(target, df, col_category=None, category=None):
+        if col_category:
+                mask = df[col_category].apply(lambda lst: category in lst)
+                df = df[~mask]
+        similarities = cosine_similarity([target], list(df['synopsis_embedding']))[0]
         similarity_df = pd.DataFrame({'uid': df['uid'], 'similarity': similarities})
-        closest = similarity_df[similarity_df['uid'] != given_uid].sort_values(by='similarity', ascending=False).head(5)
+        similarity_df =  similarity_df.sort_values(by='similarity', ascending=False)
+
+        return similarity_df
+
+def search_closest_by_uid(given_uid, df):     
+        given_embedding = df.loc[df['uid'] == given_uid, 'synopsis_embedding'].values[0]
+        similarity_df = closest_similarity(given_embedding, df)
+        closest = similarity_df[similarity_df['uid'] != given_uid].sort_values(by='similarity', ascending=False).head()
         return closest
 ##
 
@@ -148,15 +157,6 @@ def init_model_MiniLM():
     # pre-trained model
     return SentenceTransformer("sentence-transformers/all-MiniLM-L6-v2")
 
-# Search closest anime by content with optional filtering on category
-def search_closest_by_content_exclude_category(content, df, filter, rows, col_category:None, category:None):
-        if col_category:
-            mask = df[col_category].apply(lambda lst: category in lst)
-            df = df[~mask]
-        similarities = cosine_similarity([content], list(df[filter]))[0]
-        similarity_df = pd.DataFrame({'uid': df['uid'], 'similarity': similarities})
-        closest = similarity_df.sort_values(by='similarity', ascending=False).head(rows)
-        return closest
 
 # Based on an input anime descrption, search recommended animes from LLM
 def search_recommended_animes_from_llm(input_anime_description, filter_hentai_on):
@@ -174,10 +174,10 @@ def search_recommended_animes_from_llm(input_anime_description, filter_hentai_on
     # User wants ...
     if input_positive_clean:
         model = init_model_MiniLM()
-        df_synopsis_embedding = load_synopsis_embedding()
+        df_emb = load_synopsis_embedding()
         df_animes = load_animes()
         # Add genres
-        df_synopsis_embedding_with_genre = df_synopsis_embedding.merge(df_animes[["uid", "genre"]], on="uid", how="inner")
+        df_emb_with_genre = df_emb.merge(df_animes[["uid", "genre"]], on="uid", how="inner")
 
         # Hentai filter
         if filter_hentai_on:
@@ -188,21 +188,19 @@ def search_recommended_animes_from_llm(input_anime_description, filter_hentai_on
             category = None
 
         result_df_negative = pd.DataFrame(columns=["uid", "similarity"])
-        filter = 'synopsis_embedding'
 
         # Find all animes that are the closest to the user's preferences
         input_positive_embedding = model.encode(input_positive_clean)
-        result_df_positive = pd.DataFrame(search_closest_by_content_exclude_category(input_positive_embedding, df_synopsis_embedding_with_genre, 
-                                                                                     filter, 20, col_category, category), columns=['uid','similarity'])
+        result_df_positive = pd.DataFrame(closest_similarity(input_positive_embedding, df_emb_with_genre, col_category, category), columns=['uid','similarity']).head(20)
+
 
          # User don't want ...
         if input_negative_clean:
 
             # Find all animes that are the closest to what the user wants to avoid
             input_negative_embedding = model.encode(input_negative_clean)
-            result_df_negative = pd.DataFrame(search_closest_by_content_exclude_category(input_negative_embedding, df_synopsis_embedding_with_genre, 
-                                                                                         filter, 20, col_category, category), columns=['uid','similarity'])
-
+            result_df_negative = pd.DataFrame(closest_similarity(input_negative_embedding, df_emb_with_genre, col_category, category), columns=['uid','similarity']).head(20) 
+           
         # User don't want a Title ...
         if input_title_clean:
             mask = df_animes["title"].str.lower().apply(lambda title: any(mot in title for mot in input_negative_clean.lower().split()))
@@ -213,7 +211,7 @@ def search_recommended_animes_from_llm(input_anime_description, filter_hentai_on
         result_df_final = result_df_positive[~result_df_positive['uid'].isin(result_df_negative['uid'])]
         result_df_final = result_df_final.sort_values(by='similarity', ascending=False)
 
-        return result_df_final.head(5)
+        return result_df_final.head()
     
     else:
          raise ValueError("Sorry, your input doesn't allow us to generate any recommendations. Please try rephrasing your request with more details or clarity.")
@@ -221,6 +219,7 @@ def search_recommended_animes_from_llm(input_anime_description, filter_hentai_on
 
 ## RECO_06 : diffusion list for new content
 
+@st.cache_data
 def explode_favorite_anime_profile(df):
     df["favorites_anime"] = df["favorites_anime"].apply(ast.literal_eval)
     df_favorites = df[["profile", "favorites_anime"]].copy().explode("favorites_anime")
@@ -234,18 +233,13 @@ def generate_diffusion_list(target):
     
     model = init_model_MiniLM()
     df_emb = load_synopsis_embedding()
-    filter = 'synopsis_embedding'
     df_profiles = load_profiles()
     df_favorites = explode_favorite_anime_profile(df_profiles)
 
     target = re.sub("[^A-Za-z]+", " ", str(target)).lower()
     target = model.encode(target)
 
-    # cosine similarity : given embedding VS all embeddings
-    similarities = cosine_similarity([target], list(df_emb[filter]))[0]
-
-    # Store similarity
-    similarity_df = pd.DataFrame({'uid': df_emb['uid'], 'similarity': similarities})
+    similarity_df = closest_similarity(target, df_emb)
 
     # filter by similarity
     closest = similarity_df[similarity_df['similarity'] >= 0.5].sort_values(by='similarity', ascending=False)
@@ -257,3 +251,12 @@ def generate_diffusion_list(target):
     sorted_profile = grouped_df.sort_values(by="uid", key=lambda x: x.str.len(), ascending=False)
 
     return sorted_profile
+
+
+
+def extract_animes_from_uid(df_animes, df_uid):
+    
+    uids = {uid for sub in df_uid['uid'] for uid in sub}
+    selected_animes = df_animes[df_animes['uid'].isin(uids)][['title','uid']].reset_index(drop=True)
+       
+    return selected_animes
