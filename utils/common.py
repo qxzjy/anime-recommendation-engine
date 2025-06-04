@@ -147,15 +147,18 @@ def init_model_MiniLM():
     # pre-trained model
     return SentenceTransformer("sentence-transformers/all-MiniLM-L6-v2")
 
-# Search closest anime by content
-def search_closest_by_content(content, df, filter, rows):
-    similarities = cosine_similarity([content], list(df[filter]))[0]
-    similarity_df = pd.DataFrame({'uid': df['uid'], 'similarity': similarities})
-    closest = similarity_df.sort_values(by='similarity', ascending=False).head(rows)
-    return closest
+# Search closest anime by content with optional filtering on category
+def search_closest_by_content_exclude_category(content, df, filter, rows, col_category:None, category:None):
+        if col_category:
+            mask = df[col_category].apply(lambda lst: category in lst)
+            df = df[~mask]
+        similarities = cosine_similarity([content], list(df[filter]))[0]
+        similarity_df = pd.DataFrame({'uid': df['uid'], 'similarity': similarities})
+        closest = similarity_df.sort_values(by='similarity', ascending=False).head(rows)
+        return closest
 
 # Based on an input anime descrption, search recommended animes from LLM
-def search_recommended_animes_from_llm(input_anime_description):
+def search_recommended_animes_from_llm(input_anime_description, filter_hentai_on):
     input_clean = re.sub("[^A-Za-z]+", " ", str(input_anime_description)).lower()
 
     model_llm = init_model_llm()
@@ -170,22 +173,34 @@ def search_recommended_animes_from_llm(input_anime_description):
     # User wants ...
     if input_positive_clean:
         model = init_model_MiniLM()
-        df_MiniLM = load_synopsis_embedding()
+        df_synopsis_embedding = load_synopsis_embedding()
         df_animes = load_animes()
+        # Add genres
+        df_synopsis_embedding_with_genre = df_synopsis_embedding.merge(df_animes[["uid", "genre"]], on="uid", how="inner")
+
+        # Hentai filter
+        if filter_hentai_on:
+            col_category = "genre"
+            category = "Hentai"
+        else:
+            col_category = None
+            category = None
 
         result_df_negative = pd.DataFrame(columns=["uid", "similarity"])
         filter = 'synopsis_embedding'
 
         # Find all animes that are the closest to the user's preferences
         input_positive_embedding = model.encode(input_positive_clean)
-        result_df_positive = pd.DataFrame(search_closest_by_content(input_positive_embedding, df_MiniLM, filter, 20), columns=['uid','similarity'])
+        result_df_positive = pd.DataFrame(search_closest_by_content_exclude_category(input_positive_embedding, df_synopsis_embedding_with_genre, 
+                                                                                     filter, 20, col_category, category), columns=['uid','similarity'])
 
          # User don't want ...
         if input_negative_clean:
 
             # Find all animes that are the closest to what the user wants to avoid
             input_negative_embedding = model.encode(input_negative_clean)
-            result_df_negative = pd.DataFrame(search_closest_by_content(input_negative_embedding, df_MiniLM, filter, 20), columns=['uid','similarity'])
+            result_df_negative = pd.DataFrame(search_closest_by_content_exclude_category(input_negative_embedding, df_synopsis_embedding_with_genre, 
+                                                                                         filter, 20, col_category, category), columns=['uid','similarity'])
 
         # User don't want a Title ...
         if input_title_clean:
