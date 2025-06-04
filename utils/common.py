@@ -1,5 +1,14 @@
+from langchain_core.prompts import ChatPromptTemplate
+from langchain_mistralai import ChatMistralAI
+from langchain.output_parsers import PydanticOutputParser
+from pydantic import BaseModel
+from typing import Optional
+
+import re
 import streamlit as st
 import pandas as pd
+import ast
+from sentence_transformers import SentenceTransformer
 from sklearn.metrics.pairwise import cosine_similarity
 
 DATA_ANIMES_URL = ("https://anime-recommendation-engine.s3.eu-west-3.amazonaws.com/data/animes_clean.csv")
@@ -71,7 +80,7 @@ def display_img(col_image, col_caption):
     if col_image is None or col_image != col_image:
         st.write("No picture to display.")
     else:
-        st.image(col_image, caption=col_caption, use_column_width=False)
+        st.image(col_image, caption=col_caption, width=300)
 ##
 
 # ALS (Collaborative filtering)
@@ -89,3 +98,162 @@ def load_profile_recommendations(df, profile):
 
 
 
+## RECO_05 : input in natural language
+
+# Output format
+class OutputSchema(BaseModel):
+    positive: str
+    negative: str
+    title: Optional[str]
+
+# init Model LLM
+@st.cache_resource
+def init_model_llm():
+    # Prompt string 
+    sys_prompt="""
+    You are a positive and negative element extractor.
+
+    Analyze the user's sentence and extract:
+    - what the user wants (positive),
+    - what the user explicitly wants to avoid (negative).
+
+    If the user mentions a well-known title (such as an anime, movie, game, etc.) in what they want to avoid, extract it separately.
+
+    Return your response as a JSON object with three fields:
+    - positive: a single string summarizing with key-words what the user wants.
+    - negative: a single string summarizing with key-words what the user wants to avoid.
+    - title: the name of the title the user wants to avoid, if any (e.g., an anime, show, movie); return `null` if none is found.
+
+    {{format_instructions}}
+    """
+
+    # Define system prompt
+    start_prompt = ChatPromptTemplate.from_messages([
+        ("system", sys_prompt),
+        ("user", "{text}")
+    ])
+
+    # Don't forget your API Key : export MISTRAL_API_KEY=...
+
+    # Let's instanciate a model 
+    llm = ChatMistralAI(model="mistral-medium-latest")
+
+    model_llm = start_prompt | llm 
+
+    return model_llm
+
+# init Model MiniLM
+@st.cache_data
+def init_model_MiniLM():
+    # pre-trained model
+    return SentenceTransformer("sentence-transformers/all-MiniLM-L6-v2")
+
+# Search closest anime by content with optional filtering on category
+def search_closest_by_content_exclude_category(content, df, filter, rows, col_category:None, category:None):
+        if col_category:
+            mask = df[col_category].apply(lambda lst: category in lst)
+            df = df[~mask]
+        similarities = cosine_similarity([content], list(df[filter]))[0]
+        similarity_df = pd.DataFrame({'uid': df['uid'], 'similarity': similarities})
+        closest = similarity_df.sort_values(by='similarity', ascending=False).head(rows)
+        return closest
+
+# Based on an input anime descrption, search recommended animes from LLM
+def search_recommended_animes_from_llm(input_anime_description, filter_hentai_on):
+    input_clean = re.sub("[^A-Za-z]+", " ", str(input_anime_description)).lower()
+
+    model_llm = init_model_llm()
+    parser = PydanticOutputParser(pydantic_object=OutputSchema)
+
+    # Get the response 
+    response = model_llm.invoke({"text": input_clean, "format_instructions": parser.get_format_instructions()})
+    input_positive_clean = parser.parse(response.content).positive
+    input_negative_clean = parser.parse(response.content).negative
+    input_title_clean = parser.parse(response.content).title
+
+    # User wants ...
+    if input_positive_clean:
+        model = init_model_MiniLM()
+        df_synopsis_embedding = load_synopsis_embedding()
+        df_animes = load_animes()
+        # Add genres
+        df_synopsis_embedding_with_genre = df_synopsis_embedding.merge(df_animes[["uid", "genre"]], on="uid", how="inner")
+
+        # Hentai filter
+        if filter_hentai_on:
+            col_category = "genre"
+            category = "Hentai"
+        else:
+            col_category = None
+            category = None
+
+        result_df_negative = pd.DataFrame(columns=["uid", "similarity"])
+        filter = 'synopsis_embedding'
+
+        # Find all animes that are the closest to the user's preferences
+        input_positive_embedding = model.encode(input_positive_clean)
+        result_df_positive = pd.DataFrame(search_closest_by_content_exclude_category(input_positive_embedding, df_synopsis_embedding_with_genre, 
+                                                                                     filter, 20, col_category, category), columns=['uid','similarity'])
+
+         # User don't want ...
+        if input_negative_clean:
+
+            # Find all animes that are the closest to what the user wants to avoid
+            input_negative_embedding = model.encode(input_negative_clean)
+            result_df_negative = pd.DataFrame(search_closest_by_content_exclude_category(input_negative_embedding, df_synopsis_embedding_with_genre, 
+                                                                                         filter, 20, col_category, category), columns=['uid','similarity'])
+
+        # User don't want a Title ...
+        if input_title_clean:
+            mask = df_animes["title"].str.lower().apply(lambda title: any(mot in title for mot in input_negative_clean.lower().split()))
+            result_df_title_negative = df_animes[mask]
+            result_df_negative = pd.concat([result_df_negative, result_df_title_negative], ignore_index=True)   
+
+        # We exclude the anime the user doesn't want from those they do want
+        result_df_final = result_df_positive[~result_df_positive['uid'].isin(result_df_negative['uid'])]
+        result_df_final = result_df_final.sort_values(by='similarity', ascending=False)
+
+        return result_df_final.head(5)
+    
+    else:
+         raise ValueError("Sorry, your input doesn't allow us to generate any recommendations. Please try rephrasing your request with more details or clarity.")
+    
+
+## RECO_06 : diffusion list for new content
+
+def explode_favorite_anime_profile(df):
+    df["favorites_anime"] = df["favorites_anime"].apply(ast.literal_eval)
+    df_favorites = df[["profile", "favorites_anime"]].copy().explode("favorites_anime")
+    df_favorites = df_favorites.dropna(subset=["favorites_anime"])
+    df_favorites["favorites_anime"] = df_favorites["favorites_anime"].astype("int64")
+
+    return df_favorites
+
+
+def generate_diffusion_list(target):
+    
+    model = init_model_MiniLM()
+    df_emb = load_synopsis_embedding()
+    filter = 'synopsis_embedding'
+    df_profiles = load_profiles()
+    df_favorites = explode_favorite_anime_profile(df_profiles)
+
+    target = re.sub("[^A-Za-z]+", " ", str(target)).lower()
+    target = model.encode(target)
+
+    # cosine similarity : given embedding VS all embeddings
+    similarities = cosine_similarity([target], list(df_emb[filter]))[0]
+
+    # Store similarity
+    similarity_df = pd.DataFrame({'uid': df_emb['uid'], 'similarity': similarities})
+
+    # filter by similarity
+    closest = similarity_df[similarity_df['similarity'] >= 0.5].sort_values(by='similarity', ascending=False)
+
+    df_merged = df_favorites.merge(closest, left_on='favorites_anime', right_on='uid', how='inner')
+    grouped_df = df_merged.groupby('profile').agg({'uid': list}).reset_index()
+
+    # sorted by uid lenght
+    sorted_profile = grouped_df.sort_values(by="uid", key=lambda x: x.str.len(), ascending=False)
+
+    return sorted_profile
