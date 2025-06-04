@@ -79,7 +79,7 @@ def display_img(col_image, col_caption):
     if col_image is None or col_image != col_image:
         st.write("No picture to display.")
     else:
-        st.image(col_image, caption=col_caption, use_column_width=False)
+        st.image(col_image, caption=col_caption, width=300)
 ##
 
 # ALS (Collaborative filtering)
