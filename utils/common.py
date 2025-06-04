@@ -7,6 +7,7 @@ from typing import Optional
 import re
 import streamlit as st
 import pandas as pd
+import ast
 from sentence_transformers import SentenceTransformer
 from sklearn.metrics.pairwise import cosine_similarity
 
@@ -216,3 +217,43 @@ def search_recommended_animes_from_llm(input_anime_description, filter_hentai_on
     
     else:
          raise ValueError("Sorry, your input doesn't allow us to generate any recommendations. Please try rephrasing your request with more details or clarity.")
+    
+
+## RECO_06 : diffusion list for new content
+
+def explode_favorite_anime_profile(df):
+    df["favorites_anime"] = df["favorites_anime"].apply(ast.literal_eval)
+    df_favorites = df[["profile", "favorites_anime"]].copy().explode("favorites_anime")
+    df_favorites = df_favorites.dropna(subset=["favorites_anime"])
+    df_favorites["favorites_anime"] = df_favorites["favorites_anime"].astype("int64")
+
+    return df_favorites
+
+
+def generate_diffusion_list(target):
+    
+    model = init_model_MiniLM()
+    df_emb = load_synopsis_embedding()
+    filter = 'synopsis_embedding'
+    df_profiles = load_profiles()
+    df_favorites = explode_favorite_anime_profile(df_profiles)
+
+    target = re.sub("[^A-Za-z]+", " ", str(target)).lower()
+    target = model.encode(target)
+
+    # cosine similarity : given embedding VS all embeddings
+    similarities = cosine_similarity([target], list(df_emb[filter]))[0]
+
+    # Store similarity
+    similarity_df = pd.DataFrame({'uid': df_emb['uid'], 'similarity': similarities})
+
+    # filter by similarity
+    closest = similarity_df[similarity_df['similarity'] >= 0.5].sort_values(by='similarity', ascending=False)
+
+    df_merged = df_favorites.merge(closest, left_on='favorites_anime', right_on='uid', how='inner')
+    grouped_df = df_merged.groupby('profile').agg({'uid': list}).reset_index()
+
+    # sorted by uid lenght
+    sorted_profile = grouped_df.sort_values(by="uid", key=lambda x: x.str.len(), ascending=False)
+
+    return sorted_profile
