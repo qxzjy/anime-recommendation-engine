@@ -2,7 +2,7 @@ import streamlit as st
 
 st.set_page_config(page_title="Anime Recommendation Engine 🏯", layout="wide")
 
-from utils.common import init_model_MiniLM, load_synopsis_embedding, search_recommended_animes_from_llm, load_animes, load_anime, write_col, display_img
+from utils.common import search_recommended_animes_from_llm, load_animes, load_anime, write_col, display_img
 
 # Load data
 df_animes = load_animes()

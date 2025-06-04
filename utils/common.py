@@ -2,6 +2,7 @@ from langchain_core.prompts import ChatPromptTemplate
 from langchain_mistralai import ChatMistralAI
 from langchain.output_parsers import PydanticOutputParser
 from pydantic import BaseModel
+from typing import Optional
 
 import re
 import streamlit as st
@@ -102,6 +103,7 @@ def load_profile_recommendations(df, profile):
 class OutputSchema(BaseModel):
     positive: str
     negative: str
+    title: Optional[str]
 
 # init Model LLM
 @st.cache_resource
@@ -114,9 +116,12 @@ def init_model_llm():
     - what the user wants (positive),
     - what the user explicitly wants to avoid (negative).
 
-    Return your response as a JSON object with two fields:
+    If the user mentions a well-known title (such as an anime, movie, game, etc.) in what they want to avoid, extract it separately.
+
+    Return your response as a JSON object with three fields:
     - positive: a single string summarizing with key-words what the user wants.
-    - negative: a single string summarizing with key-words  what the user wants to avoid.
+    - negative: a single string summarizing with key-words what the user wants to avoid.
+    - title: the name of the title the user wants to avoid, if any (e.g., an anime, show, movie); return `null` if none is found.
 
     {{format_instructions}}
     """
@@ -160,6 +165,7 @@ def search_recommended_animes_from_llm(input_anime_description):
     response = model_llm.invoke({"text": input_clean, "format_instructions": parser.get_format_instructions()})
     input_positive_clean = parser.parse(response.content).positive
     input_negative_clean = parser.parse(response.content).negative
+    input_title_clean = parser.parse(response.content).title
 
     # User wants ...
     if input_positive_clean:
@@ -181,10 +187,11 @@ def search_recommended_animes_from_llm(input_anime_description):
             input_negative_embedding = model.encode(input_negative_clean)
             result_df_negative = pd.DataFrame(search_closest_by_content(input_negative_embedding, df_MiniLM, filter, 20), columns=['uid','similarity'])
 
-            # If the user wants to avoid a title
+        # User don't want a Title ...
+        if input_title_clean:
             mask = df_animes["title"].str.lower().apply(lambda title: any(mot in title for mot in input_negative_clean.lower().split()))
             result_df_title_negative = df_animes[mask]
-            result_df_negative = pd.concat([result_df_negative, result_df_title_negative], ignore_index=True)
+            result_df_negative = pd.concat([result_df_negative, result_df_title_negative], ignore_index=True)   
 
         # We exclude the anime the user doesn't want from those they do want
         result_df_final = result_df_positive[~result_df_positive['uid'].isin(result_df_negative['uid'])]
