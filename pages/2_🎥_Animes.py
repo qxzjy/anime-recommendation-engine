@@ -13,7 +13,7 @@ This tool helps you find new animes with themes and storylines that match your i
 
 # Load data
 df_animes = load_animes()
-df_synopsis_embedding = load_synopsis_embedding()
+df_emb = load_synopsis_embedding()
 
 # Create a dictionnary {title to show : id}
 animes_dict = {row["title"]: row["uid"] for _, row in df_animes.iterrows()}
@@ -47,9 +47,8 @@ if selected_anime_uid != None :
             if selected_anime["synopsis"] is None or selected_anime["synopsis"] != selected_anime["synopsis"]:
                 st.write("No recommendation provided, the synopsis is missing.")
             else:
-                filter = 'synopsis_embedding'
-                closest_anime_synopsis = search_closest_by_uid(selected_anime["uid"], df_synopsis_embedding, filter)
-
+                closest_anime_synopsis = search_closest_by_uid(selected_anime["uid"], df_emb)
+                
                 favorites_anime = closest_anime_synopsis['uid'].tolist()
 
                 if favorites_anime:

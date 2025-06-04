@@ -1,9 +1,9 @@
 import streamlit as st
-import pandas as pd
 
 st.set_page_config(page_title="Anime Recommendation Engine 🏯", layout="wide")
 
-from utils.common import generate_diffusion_list, load_animes, load_profiles
+from utils.common import generate_diffusion_list, load_animes, extract_animes_from_uid, load_profiles
+
 # Load data
 df_animes = load_animes()
 df_profiles = load_profiles()
@@ -24,11 +24,10 @@ with st.form("anime_input_form"):
         diffusion_list_df = generate_diffusion_list(input_anime_description)
 
         st.write("#### Because they loved:")
+        
+        selected_animes = extract_animes_from_uid(df_animes, diffusion_list_df)
 
-        uids = {uid for sub in diffusion_list_df['uid'] for uid in sub}
-        selected_animes = df_animes[df_animes['uid'].isin(uids)][['title','uid']]
+        st.write(selected_animes[['title','uid']])
 
-        st.write(selected_animes.reset_index(drop=True))
-
-        st.write(f"#### Profiles found: {diffusion_list_df.shape[0]}    ({round(diffusion_list_df.shape[0]/df_profiles.shape[0],2)}% of all profiles)")
+        st.write(f"#### Profiles found: {diffusion_list_df.shape[0]}    ({round(diffusion_list_df.shape[0]/df_profiles.shape[0],3)}% of all profiles)")
         st.write(diffusion_list_df['profile'])
