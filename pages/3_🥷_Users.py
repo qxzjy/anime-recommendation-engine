@@ -5,7 +5,7 @@ st.set_page_config(page_title="Anime Recommendation Engine 🏯", layout="wide")
 
 from utils.common import load_profiles, load_profile, load_animes, load_anime, load_als_favorite_recommendations, load_profile_recommendations, load_als_reviews_recommendations, display_synopsis
 
-st.markdown("## 🎥 User-Based Anime Recommendations")
+st.markdown("## 🥷 User-Based Anime Recommendations")
 
 st.write(
     """Discover anime recommendations tailored to your viewing history and preferences.  
