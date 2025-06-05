@@ -8,7 +8,7 @@ from utils.common import generate_diffusion_list, load_animes, extract_animes_fr
 df_animes = load_animes()
 df_profiles = load_profiles()
 
-st.markdown("## Diffusion list for new content")
+st.markdown("## 💻 Diffusion list for new content")
 
 st.write(
     """ List of diffusions for new content, based on the synopsis and targeting profiles who have favorited similar content. """
