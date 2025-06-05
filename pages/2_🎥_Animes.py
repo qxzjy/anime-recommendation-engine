@@ -2,7 +2,7 @@ import streamlit as st
 
 st.set_page_config(page_title="Anime Recommendation Engine 🏯", layout="wide")
 
-from utils.common import load_animes, load_anime, load_synopsis_embedding, search_closest_by_uid, write_col, display_img
+from utils.common import load_animes, load_anime, load_synopsis_embedding, search_closest_by_uid, write_col, display_img, display_synopsis
 
 st.markdown("## 🎥 Anime Search & Similar Recommendations")
 
@@ -52,15 +52,14 @@ if selected_anime_uid != None :
                 favorites_anime = closest_anime_synopsis['uid'].tolist()
 
                 if favorites_anime:
-                    for fav in favorites_anime:
-                        col1, col2 = st.columns(2)
-                        anime = load_anime(df_animes, fav)                    
-                        if anime is not None:
-                            with col1:
-                                display_img(anime["img_url"], anime["title"])
-                            with col2:
-                                write_col(anime["synopsis"])
-                                write_col("Episodes : " + str(anime["episodes"]))
-                        st.divider()  
+                    for i in range(0, len(favorites_anime), 3):
+                        cols = st.columns(3)
+                        for col, fav in zip(cols, favorites_anime[i:i+3]):
+                            anime = load_anime(df_animes, fav)
+                            if anime is not None:
+                                with col:
+                                    st.image(anime["img_url"], width=300)
+                                    if st.button(label=anime["title"]):
+                                        display_synopsis(anime)
                 else:
                     st.write("No favorite anime to display.")
