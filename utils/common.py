@@ -15,7 +15,9 @@ DATA_ANIMES_URL = ("https://anime-recommendation-engine.s3.eu-west-3.amazonaws.c
 DATA_PROFILES_URL = ("https://anime-recommendation-engine.s3.eu-west-3.amazonaws.com/data/profiles_clean.csv")
 DATA_REVIEWS_URL = ("https://anime-recommendation-engine.s3.eu-west-3.amazonaws.com/data/reviews_clean.csv")
 DATA_SYNOPSIS_EMBEDDING_URL = ("https://anime-recommendation-engine.s3.eu-west-3.amazonaws.com/data/synopsis_embedding.json")
-DATA_ALS_RECOMMENDATION_URL = ("https://anime-recommendation-engine.s3.eu-west-3.amazonaws.com/data/als_is_favorite_based_reco.csv")
+DATA_ALS_RECOMMENDATION_FAVORITE_URL = ("https://anime-recommendation-engine.s3.eu-west-3.amazonaws.com/data/als_is_favorite_based_reco.csv")
+DATA_ALS_RECOMMENDATION_REVIEWS_URL = ("https://anime-recommendation-engine.s3.eu-west-3.amazonaws.com/data/als_reviews_score_based_reco.csv")
+
 
 # ANIMES
 @st.cache_data
@@ -53,7 +55,7 @@ def load_profile(df, profile):
 def load_reviews(nrows=None):
     data = pd.read_csv(DATA_REVIEWS_URL, nrows=nrows)
     return data
-
+##
 
 # SYNOPSIS EMBEDDING
 @st.cache_data
@@ -94,8 +96,13 @@ def display_img(col_image, col_caption):
 
 # ALS (Collaborative filtering)
 @st.cache_data
-def load_als_recommendations():
-    data = pd.read_csv(DATA_ALS_RECOMMENDATION_URL)
+def load_als_favorite_recommendations():
+    data = pd.read_csv(DATA_ALS_RECOMMENDATION_FAVORITE_URL)
+    return data
+
+@st.cache_data
+def load_als_reviews_recommendations():
+    data = pd.read_csv(DATA_ALS_RECOMMENDATION_REVIEWS_URL)
     return data
 
 @st.cache_data
@@ -104,7 +111,7 @@ def load_profile_recommendations(df, profile):
     if selected_profile.empty :
         return selected_profile
     return selected_profile.iloc[0]
-
+##
 
 
 ## RECO_05 : input in natural language
