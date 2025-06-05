@@ -11,7 +11,7 @@ df_animes = load_animes()
 df_profiles = load_profiles()
 df_reviews = load_reviews()
 
-st.markdown("# EDA")
+st.markdown("# 📈 EDA")
 
 st.markdown("""
 Welcome to the EDA section!
