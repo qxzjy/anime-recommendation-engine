@@ -259,7 +259,14 @@ def generate_diffusion_list(target):
 
     return sorted_profile
 
-
+# STREAM_02
+@st.dialog("Anime overview")
+def display_synopsis(anime):             
+    if anime is not None:
+        write_col("Title : " + anime["title"])
+        write_col(anime["synopsis"])
+        write_col("Episodes : " + str(anime["episodes"]))
+##
 
 def extract_animes_from_uid(df_animes, df_uid):
     
