@@ -87,6 +87,12 @@ def write_col(col):
     else:
         st.write(col)
 
+def write_col_with_label(col, label):
+    if col is None or pd.isna(col):
+        st.write(f"{label}No information available.")
+    else:
+        st.write(f"{label}{col}")
+
 def display_img(col_image, col_caption):
     if col_image is None or col_image != col_image:
         st.write("No picture to display.")
@@ -265,7 +271,7 @@ def display_synopsis(anime):
     if anime is not None:
         write_col("Title : " + anime["title"])
         write_col(anime["synopsis"])
-        write_col("Episodes : " + str(anime["episodes"]))
+        write_col_with_label(anime["episodes"], "Episodes : ")
 ##
 
 def extract_animes_from_uid(df_animes, df_uid):

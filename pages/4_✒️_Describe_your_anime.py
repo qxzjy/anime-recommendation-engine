@@ -2,7 +2,7 @@ import streamlit as st
 
 st.set_page_config(page_title="Anime Recommendation Engine 🏯", layout="wide")
 
-from utils.common import search_recommended_animes_from_llm, load_animes, load_anime, write_col, display_img
+from utils.common import search_recommended_animes_from_llm, load_animes, load_anime, write_col, write_col_with_label, display_img
 
 # Load data
 df_animes = load_animes()
@@ -34,7 +34,7 @@ with st.form("anime_input_form"):
                             display_img(anime["img_url"], anime["title"])
                         with col2:
                             write_col(anime["synopsis"])
-                            write_col("Episodes : " + str(anime["episodes"]))
+                            write_col_with_label(anime["episodes"], "Episodes : ")
                     st.divider()  
             else:
                 st.write("No anime to recommend.")

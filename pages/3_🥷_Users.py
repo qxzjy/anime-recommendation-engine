@@ -3,7 +3,7 @@ import streamlit as st
 
 st.set_page_config(page_title="Anime Recommendation Engine 🏯", layout="wide")
 
-from utils.common import load_profiles, load_profile, load_animes, load_anime, display_img, load_als_favorite_recommendations, load_profile_recommendations, load_als_reviews_recommendations, display_synopsis
+from utils.common import load_profiles, load_profile, load_animes, load_anime, load_als_favorite_recommendations, load_profile_recommendations, load_als_reviews_recommendations, display_synopsis
 
 st.markdown("## 🎥 User-Based Anime Recommendations")
 
