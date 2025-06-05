@@ -7,6 +7,13 @@ from utils.common import load_profiles, load_profile, load_animes, load_anime, d
 
 st.markdown("## 🎥 User-Based Anime Recommendations")
 
+@st.dialog("Anime overview")
+def display_synopsis(anime):             
+    if anime is not None:
+        write_col("Title : " + anime["title"])
+        write_col(anime["synopsis"])
+        write_col("Episodes : " + str(anime["episodes"]))
+
 st.write(
     """Discover anime recommendations tailored to your viewing history and preferences.  
 We analyze your liked animes and compare them with other users favorites to suggest titles you might enjoy."""
@@ -41,7 +48,9 @@ if selected_user_profile != None :
                     anime = load_anime(df_animes, fav)
                     if anime is not None:
                         with col:
-                            display_img(anime["img_url"], anime["title"])
+                            st.image(anime["img_url"], width=300)
+                            if st.button(label=anime["title"]):
+                                display_synopsis(anime)
         else:
             st.write("No favorite anime to display.")
 
@@ -53,16 +62,15 @@ if selected_user_profile != None :
         else:
             recommendations = ast.literal_eval(selected_profile_favorite_recommendations["recommendations"])
 
-            for reco in recommendations:
-                col1, col2 = st.columns(2)
-                anime = load_anime(df_animes, reco)                    
-                if anime is not None:
-                    with col1:
-                        display_img(anime["img_url"], anime["title"])
-                    with col2:
-                        write_col(anime["synopsis"])
-                        write_col("Episodes : " + str(anime["episodes"]))
-                st.divider()  
+            for i in range(0, len(recommendations), 3):
+                cols = st.columns(3)
+                for col, fav in zip(cols, recommendations[i:i+3]):
+                    anime = load_anime(df_animes, fav)
+                    if anime is not None:
+                        with col:
+                            st.image(anime["img_url"], width=300)
+                            if st.button(label=anime["title"]):
+                                display_synopsis(anime) 
 
     # RECO_03
     with st.expander("Anime recommendations based on my review scores"):
@@ -72,13 +80,12 @@ if selected_user_profile != None :
         else:
             recommendations = ast.literal_eval(selected_profile_reviews_recommendations["recommendations"])
 
-            for reco in recommendations:
-                col1, col2 = st.columns(2)
-                anime = load_anime(df_animes, reco)                    
-                if anime is not None:
-                    with col1:
-                        display_img(anime["img_url"], anime["title"])
-                    with col2:
-                        write_col(anime["synopsis"])
-                        write_col("Episodes : " + str(anime["episodes"]))
-                st.divider()  
+            for i in range(0, len(recommendations), 3):
+                cols = st.columns(3)
+                for col, fav in zip(cols, recommendations[i:i+3]):
+                    anime = load_anime(df_animes, fav)
+                    if anime is not None:
+                        with col:
+                            st.image(anime["img_url"], width=300)
+                            if st.button(label=anime["title"]):
+                                display_synopsis(anime)
