@@ -12,12 +12,12 @@ df_MiniLM = load_synopsis_embedding()
 model = init_model_MiniLM()
 
 pages = [
-    st.Page("Anime_Recommendation_Engine.py", title="Anime Recommendation Engine"),
-    st.Page("pages/1_📈_EDA.py", title="EDA", icon="📈"),
-    st.Page("pages/2_🎥_Animes.py", title="Animes", icon="🎥"),
-    st.Page("pages/3_🥷_Users.py", title="Users", icon="🥷"),
-    st.Page("pages/4_✒️_Describe_your_anime.py", title="Describe your anime", icon="✒️"),
-    st.Page("pages/5_💻_Diffusion_list_for_new_content.py", title="Diffusion list for new content", icon="💻")
+    st.Page("pages/home.py", title="Anime Recommendation Engine"),
+    st.Page("pages/eda.py", title="EDA", icon="📈"),
+    st.Page("pages/animes.py", title="Animes", icon="🎥"),
+    st.Page("pages/users.py", title="Users", icon="🥷"),
+    st.Page("pages/describe_anime.py", title="Describe your anime", icon="✒️"),
+    st.Page("pages/diffusion_list_new_content.py", title="Diffusion list for new content", icon="💻")
 ]
 
 filter_hentai_on = st.sidebar.toggle("Filter out Hentai", value=True)

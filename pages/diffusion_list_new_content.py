@@ -29,5 +29,5 @@ with st.form("anime_input_form"):
 
         st.write(selected_animes[['title','uid']])
 
-        st.write(f"#### Profiles found: {diffusion_list_df.shape[0]}    ({round(diffusion_list_df.shape[0]/df_profiles.shape[0],3)}% of all profiles)")
+        st.write(f"#### Profiles found: {diffusion_list_df.shape[0]}    ({round(diffusion_list_df.shape[0]/df_profiles.shape[0],3)*100}% of all profiles)")
         st.write(diffusion_list_df['profile'])
