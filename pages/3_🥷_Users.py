@@ -4,7 +4,6 @@ import streamlit as st
 st.set_page_config(page_title="Anime Recommendation Engine 🏯", layout="wide")
 
 from utils.common import load_profiles, load_profile, load_animes, load_anime, load_als_favorite_recommendations, load_profile_recommendations, load_als_reviews_recommendations, display_synopsis
-from secrets import token_urlsafe
 
 st.markdown("## 🥷 User-Based Anime Recommendations")
 
@@ -43,7 +42,7 @@ if selected_user_profile != None :
                     if anime is not None:
                         with col:
                             st.image(anime["img_url"], width=300)
-                            if st.button(label=anime["title"], key=token_urlsafe(8)):
+                            if st.button(label=anime["title"]):
                                 display_synopsis(anime)
         else:
             st.write("No favorite anime to display.")
@@ -63,7 +62,7 @@ if selected_user_profile != None :
                     if anime is not None:
                         with col:
                             st.image(anime["img_url"], width=300)
-                            if st.button(label=anime["title"], key=token_urlsafe(8)):
+                            if st.button(label=anime["title"]):
                                 display_synopsis(anime) 
 
     # RECO_03
@@ -81,5 +80,5 @@ if selected_user_profile != None :
                     if anime is not None:
                         with col:
                             st.image(anime["img_url"], width=300)
-                            if st.button(label=anime["title"], key=token_urlsafe(8)):
+                            if st.button(label=anime["title"]):
                                 display_synopsis(anime)
