@@ -1,9 +1,12 @@
 import ast
 import streamlit as st
 
-st.set_page_config(page_title="Anime Recommendation Engine 🏯", layout="wide")
+from utils.common import load_profiles, load_profile, load_animes, load_anime, load_als_favorite_recommendations, load_profile_recommendations, load_als_reviews_recommendations, display_synopsis, load_hentai_uid
 
-from utils.common import load_profiles, load_profile, load_animes, load_anime, load_als_favorite_recommendations, load_profile_recommendations, load_als_reviews_recommendations, display_synopsis
+if st.session_state['hentai_filter_on'] :
+    st.write("pas hentai")
+else :
+    st.write("hentai")
 
 st.markdown("## 🥷 User-Based Anime Recommendations")
 
@@ -17,6 +20,7 @@ df_als_favorite_recommendation = load_als_favorite_recommendations()
 df_als_reviews_recommendation = load_als_reviews_recommendations()
 df_animes = load_animes()
 df_profiles = load_profiles()
+df_hentai_uid = load_hentai_uid()
 
 # SelectBox
 selected_user_profile = st.selectbox("Choose user",
@@ -32,7 +36,10 @@ if selected_user_profile != None :
 
     # Favorite anims
     with st.expander("Favorite anims"):
-        favorites_anime = ast.literal_eval(selected_profile["favorites_anime"])
+        favorites_anime = ast.literal_eval(selected_profile["favorites_anime"]) # Update HERE to exclude Hentai
+
+        if st.session_state['hentai_filter_on'] :
+                    favorites_anime =  [value for value in favorites_anime if value not in df_hentai_uid.tolist()]
 
         if favorites_anime:
             for i in range(0, len(favorites_anime), 3):
@@ -55,6 +62,11 @@ if selected_user_profile != None :
         else:
             recommendations = ast.literal_eval(selected_profile_favorite_recommendations["recommendations"])
 
+            if st.session_state['hentai_filter_on'] :
+                recommendations = [value for value in recommendations if value not in df_hentai_uid.tolist()]
+             
+            recommendations = recommendations[:5]
+          
             for i in range(0, len(recommendations), 3):
                 cols = st.columns(3)
                 for col, fav in zip(cols, recommendations[i:i+3]):
@@ -72,6 +84,11 @@ if selected_user_profile != None :
                 st.write("No recommendation provided, no favorites animes.")
         else:
             recommendations = ast.literal_eval(selected_profile_reviews_recommendations["recommendations"])
+
+            if st.session_state['hentai_filter_on'] :
+                recommendations = [value for value in recommendations if value not in df_hentai_uid.tolist()]
+
+            recommendations = recommendations[:5]    
 
             for i in range(0, len(recommendations), 3):
                 cols = st.columns(3)
