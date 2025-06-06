@@ -121,35 +121,28 @@ def load_profile_recommendations(df, profile):
     return selected_profile.iloc[0]
 ##
 
+#cleaning of a text
+def clean_text(text):
+    text = re.sub("[\n\r]", " ", text)
+    text = re.sub("[^A-Za-z0-9]+", " ", text)
+    return text
 
 ## RECO_05 : input in natural language
 
 # Output format
-class OutputSchema(BaseModel):
+class OutputSchema_describe(BaseModel):
     positive: str
     negative: str
     title: Optional[str]
 
+class OutputSchema_review(BaseModel):
+    positive: str
+    negative: str
+
 # init Model LLM
 @st.cache_resource
-def init_model_llm():
-    # Prompt string 
-    sys_prompt="""
-    You are a positive and negative element extractor.
+def init_model_llm(sys_prompt):
 
-    Analyze the user's sentence and extract:
-    - what the user wants (positive),
-    - what the user explicitly wants to avoid (negative).
-
-    If the user mentions a well-known title (such as an anime, movie, game, etc.) in what they want to avoid, extract it separately.
-
-    Return your response as a JSON object with three fields:
-    - positive: a single string summarizing with key-words what the user wants.
-    - negative: a single string summarizing with key-words what the user wants to avoid.
-    - title: the name of the title the user wants to avoid, if any (e.g., an anime, show, movie); return `null` if none is found.
-
-    {{format_instructions}}
-    """
 
     # Define system prompt
     start_prompt = ChatPromptTemplate.from_messages([
@@ -177,8 +170,26 @@ def init_model_MiniLM():
 def search_recommended_animes_from_llm(input_anime_description, filter_hentai_on):
     input_clean = re.sub("[^A-Za-z]+", " ", str(input_anime_description)).lower()
 
-    model_llm = init_model_llm()
-    parser = PydanticOutputParser(pydantic_object=OutputSchema)
+    # Prompt string 
+    sys_prompt="""
+    You are a positive and negative element extractor.
+
+    Analyze the user's sentence and extract:
+    - what the user wants (positive),
+    - what the user explicitly wants to avoid (negative).
+
+    If the user mentions a well-known title (such as an anime, movie, game, etc.) in what they want to avoid, extract it separately.
+
+    Return your response as a JSON object with three fields:
+    - positive: a single string summarizing with key-words what the user wants.
+    - negative: a single string summarizing with key-words what the user wants to avoid.
+    - title: the name of the title the user wants to avoid, if any (e.g., an anime, show, movie); return `null` if none is found.
+
+    {{format_instructions}}
+    """
+
+    model_llm = init_model_llm(sys_prompt)
+    parser = PydanticOutputParser(pydantic_object=OutputSchema_describe)
 
     # Get the response 
     response = model_llm.invoke({"text": input_clean, "format_instructions": parser.get_format_instructions()})
@@ -282,3 +293,91 @@ def extract_animes_from_uid(df_animes, df_uid):
     selected_animes = df_animes[df_animes['uid'].isin(uids)][['title','uid']].reset_index(drop=True)
        
     return selected_animes
+
+
+# RECO_04
+
+# init Model LLM
+@st.cache_resource
+def init_model_llm_reviews():
+# Prompt string 
+    sys_prompt_reviews="""
+    You are a specialized in analysing the positive and negative elements in reviews of animes left by different users. Your task is to provide user with a summary of reviews left by other users on the platform to help them determine whether to watch that anime or not.
+
+    Ignore the "more pics" citation at the beginning of each review, as it refers to something outside of it.
+
+    Analyze the users' sentence and extract, if they are encountered:
+    - the positive points expressed in the reviews,
+    - the negative points on which the criticism is based.
+
+    Your response shall summarize the key aspects of the anime, taking into account that there are several reviews left by as many users, but without explicitly mentioning the amount of reviews left. Please be relatively measured with the way you present negative criticism.
+    You shall also take into account the proportion difference between positive and negative feedbacks.
+
+    Return your response as a JSON object containing up to two fields:
+    If no positive feedback is provided, ignore the generation of the sentence, and proceed to the next point.
+    - positive: a single string summarizing the positive aspects raised, starting with "Users liked:"
+    If no negative aspect is mentioned, or if they are disproportionately rare compared to the positive feedback, ignore the generation of the sentence. Otherwise, proceed as follows :
+    - negative: a single string summarizing the negative aspects raised, starting with "Users disliked:".
+
+    {{format_instructions}}
+    """
+
+    # Define system prompt
+    start_prompt_reviews = ChatPromptTemplate.from_messages([
+        ("system", sys_prompt_reviews),
+        ("user", "{text}")
+        ])
+
+    # Don't forget your API Key : export MISTRAL_API_KEY=...
+
+    # Let's instanciate a model 
+    llm_reviews = ChatMistralAI(model="mistral-medium-latest")
+
+    model_llm_reviews = start_prompt_reviews | llm_reviews 
+
+    return model_llm_reviews
+
+def generate_review_summary(given_anime_uid):    
+    sys_prompt_reviews ="""
+    You are a specialized in analysing the positive and negative elements in reviews of animes left by different users. Your task is to provide user with a summary of reviews left by other users on the platform to help them determine whether to watch that anime or not.
+
+    Ignore the "more pics" citation at the beginning of each review, as it refers to something outside of it.
+
+    Analyze the users' sentence and extract, if they are encountered:
+    - the positive points expressed in the reviews,
+    - the negative points on which the criticism is based.
+
+    Your response shall summarize the key aspects of the anime, taking into account that there are several reviews left by as many users, but without explicitly mentioning the amount of reviews left. Please be relatively measured with the way you present negative criticism.
+    You shall also take into account the proportion difference between positive and negative feedbacks.
+
+    Return your response as a JSON object containing up to two fields:
+    If no positive feedback is provided, ignore the generation of the sentence, and proceed to the next point.
+    - positive: a single string summarizing the positive aspects raised, starting with "Users liked:"
+    If no negative aspect is mentioned, or if they are disproportionately rare compared to the positive feedback, ignore the generation of the sentence. Otherwise, proceed as follows :
+    - negative: a single string summarizing the negative aspects raised, starting with "Users disliked:".
+
+    {{format_instructions}}
+    """    
+    model_llm_reviews = init_model_llm(sys_prompt_reviews)
+    parser = PydanticOutputParser(pydantic_object=OutputSchema_review)
+    
+    df_reviews=load_reviews()
+    input=df_reviews[df_reviews['anime_uid']==given_anime_uid]['text'].apply(clean_text)
+    if len(input) == 0:
+        output = ["This anime has no review yet! You can watch it and review it yourself!"]
+    else:        
+        response = model_llm_reviews.invoke({"text": input, "format_instructions": parser.get_format_instructions()})
+        output_positive = parser.parse(response.content).positive
+        output_negative = parser.parse(response.content).negative
+        ai_notice = f'Response generated by Mistral AI, based on {len(input)} reviews'
+        output = [output_positive, output_negative, ai_notice]
+    return output
+
+#Display AI review summary
+@st.dialog("Review summary : powered by Mistral AI")
+def display_review(given_anime_uid):             
+    if given_anime_uid is not None:
+        response = generate_review_summary(given_anime_uid)
+        for text in response:
+            st.markdown(text)
+

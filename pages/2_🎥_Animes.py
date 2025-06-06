@@ -2,7 +2,7 @@ import streamlit as st
 
 st.set_page_config(page_title="Anime Recommendation Engine 🏯", layout="wide")
 
-from utils.common import load_animes, load_anime, load_synopsis_embedding, search_closest_by_uid, write_col, write_col_with_label, display_img, display_synopsis
+from utils.common import load_animes, load_anime, load_synopsis_embedding, search_closest_by_uid, write_col, write_col_with_label, display_img, display_synopsis, display_review
 
 st.markdown("## 🎥 Anime Search & Similar Recommendations")
 
@@ -40,6 +40,9 @@ if selected_anime_uid != None :
         with col2:
             write_col(selected_anime["synopsis"])
             write_col_with_label(selected_anime["episodes"], "Episodes : ")
+            if st.button(label="Reviews' summary"):
+                display_review(selected_anime["uid"])
+
 
         # RECO_01
         with st.expander("Anime recommendations based on the description"):
