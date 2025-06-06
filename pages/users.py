@@ -3,11 +3,6 @@ import streamlit as st
 
 from utils.common import load_profiles, load_profile, load_animes, load_anime, load_als_favorite_recommendations, load_profile_recommendations, load_als_reviews_recommendations, display_synopsis, load_hentai_uid
 
-if st.session_state['hentai_filter_on'] :
-    st.write("pas hentai")
-else :
-    st.write("hentai")
-
 st.markdown("## 🥷 User-Based Anime Recommendations")
 
 st.write(
