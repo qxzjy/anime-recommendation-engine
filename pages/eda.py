@@ -3,7 +3,6 @@ import pandas as pd
 import plotly.express as px
 import ast
 
-st.set_page_config(page_title="Anime Recommendation Engine 🏯", layout="wide")
 from utils.common import load_animes, load_profiles, load_reviews
 
 #load data

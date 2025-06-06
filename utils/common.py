@@ -35,6 +35,14 @@ def load_anime(df, uid):
     if selected_anime.empty:
         return None
     return selected_anime.iloc[0]
+
+@st.cache_data
+def load_hentai_uid():
+    data = pd.read_csv(DATA_ANIMES_URL)
+    data["genre"] = data["genre"].apply(ast.literal_eval)
+    df_hentai = data[["uid", "genre"]].copy().explode("genre")
+    df_hentai = df_hentai[df_hentai["genre"]=="Hentai"]
+    return df_hentai["uid"]
 ##
 
 

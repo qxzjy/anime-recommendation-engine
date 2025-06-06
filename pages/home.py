@@ -1,15 +1,6 @@
 import streamlit as st
 
-st.set_page_config(page_title="Anime Recommendation Engine 🏯", layout="wide")
-
 from utils.common import load_animes, load_profiles, load_reviews, load_synopsis_embedding,  init_model_MiniLM
-
-# Load data
-df_animes = load_animes()
-df_profiles = load_profiles()
-df_reviews = load_reviews()
-df_MiniLM = load_synopsis_embedding()
-model = init_model_MiniLM()
 
 st.title("Anime Recommendation Engine 🏯")
 
