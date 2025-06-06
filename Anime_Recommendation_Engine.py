@@ -23,3 +23,7 @@ This app provides personalized anime recommendations using two main approaches:
 
 Enjoy discovering new anime tailored to your tastes!
 """)
+
+# Side menu
+st.sidebar.page_link("pages/1_📈_EDA.py", label="Ici eda")
+st.sidebar.page_link("pages/2_🎥_Animes.py", label="Ici animes")
