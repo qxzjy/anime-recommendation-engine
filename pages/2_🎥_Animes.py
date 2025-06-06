@@ -3,6 +3,7 @@ import streamlit as st
 st.set_page_config(page_title="Anime Recommendation Engine 🏯", layout="wide")
 
 from utils.common import load_animes, load_anime, load_synopsis_embedding, search_closest_by_uid, write_col, write_col_with_label, display_img, display_synopsis
+from secrets import token_urlsafe
 
 st.markdown("## 🎥 Anime Search & Similar Recommendations")
 
@@ -59,7 +60,7 @@ if selected_anime_uid != None :
                             if anime is not None:
                                 with col:
                                     st.image(anime["img_url"], width=300)
-                                    if st.button(label=anime["title"]):
+                                    if st.button(label=anime["title"], key=token_urlsafe(8)):
                                         display_synopsis(anime)
                 else:
                     st.write("No favorite anime to display.")
