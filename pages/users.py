@@ -1,7 +1,7 @@
 import ast
 import streamlit as st
 
-from utils.common import load_profiles, load_profile, load_animes, load_anime, load_als_favorite_recommendations, load_profile_recommendations, load_als_reviews_recommendations, display_synopsis, load_hentai_uid
+from utils.common import load_profiles, load_profile, load_animes, load_anime, load_als_favorite_recommendations, load_profile_recommendations, load_als_reviews_recommendations, display_synopsis, load_hentai_uid, display_img
 
 st.markdown("## 🥷 User-Based Anime Recommendations")
 
@@ -43,7 +43,7 @@ if selected_user_profile != None :
                     anime = load_anime(df_animes, fav)
                     if anime is not None:
                         with col:
-                            st.image(anime["img_url"], width=300)
+                            display_img(anime["img_url"])
                             if st.button(label=anime["title"]):
                                 display_synopsis(anime)
         else:
@@ -68,7 +68,7 @@ if selected_user_profile != None :
                     anime = load_anime(df_animes, fav)
                     if anime is not None:
                         with col:
-                            st.image(anime["img_url"], width=300)
+                            display_img(anime["img_url"])
                             if st.button(label=anime["title"]):
                                 display_synopsis(anime) 
 
@@ -91,6 +91,6 @@ if selected_user_profile != None :
                     anime = load_anime(df_animes, fav)
                     if anime is not None:
                         with col:
-                            st.image(anime["img_url"], width=300)
+                            display_img(anime["img_url"])
                             if st.button(label=anime["title"]):
                                 display_synopsis(anime)

@@ -68,7 +68,7 @@ if selected_anime_uid != None :
                             anime = load_anime(df_animes, fav)
                             if anime is not None:
                                 with col:
-                                    st.image(anime["img_url"], width=300)
+                                    display_img(anime["img_url"])
                                     if st.button(label=anime["title"]):
                                         display_synopsis(anime)
                 else:

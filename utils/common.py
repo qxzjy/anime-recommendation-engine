@@ -103,7 +103,7 @@ def write_col_with_label(col, label):
     else:
         st.write(f"{label}{col}")
 
-def display_img(col_image, col_caption):
+def display_img(col_image, col_caption=None):
     if col_image is None or col_image != col_image:
         st.write("No picture to display.")
     else:
